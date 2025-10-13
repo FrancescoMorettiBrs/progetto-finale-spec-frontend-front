@@ -1,68 +1,111 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  --brand-accent: #6c5ce7;
 }
 
 body {
-  margin: 0;
-  display: flex;
+  background-color: #f8f9fb;
+}
+
+.list-group-item {
+  border-left: 4px solid transparent;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+.list-group-item:hover {
+  background-color: #f6f7fb;
+  border-left-color: var(--brand-accent);
+}
+
+.badge.bg-secondary-subtle {
+  background-color: #eef0f5 !important;
+  border: 1px solid #dfe3eb;
+}
+
+/* ====== DARK THEME: HEADER ====== */
+.app-header--dark {
+  background: linear-gradient(180deg, #0b0f19 0%, #121a2a 100%);
+  color: #e9eef5;
+}
+.app-header--dark .app-header__topbar {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+}
+.app-header--dark .app-header__main {
+  background: transparent;
+}
+.app-logo--dark {
+  display: inline-grid;
   place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: radial-gradient(120% 120% at 10% 10%, #6c5ce7 0%, #5d4fe0 45%, #3b3dbb 100%);
+  color: #fff;
+  font-size: 20px;
+  box-shadow: 0 8px 18px rgba(18, 22, 33, 0.45);
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* ====== DARK THEME: FOOTER ====== */
+.app-footer--dark {
+  background: linear-gradient(180deg, #0e1422 0%, #0b0f19 100%);
+  color: #e9eef5;
+}
+.app-footer--dark .app-footer__main {
+  background: transparent;
+}
+.app-footer__divider--dark {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.app-footer--dark .app-footer__bottom {
+  background: rgba(255, 255, 255, 0.03);
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
+/* link su sfondo scuro */
+.app-footer__link--dark {
+  color: #e9eef5;
+  text-decoration: none;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 120ms ease, opacity 120ms ease;
 }
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.app-footer__link--dark:hover {
+  border-bottom-color: rgba(233, 238, 245, 0.6);
+  opacity: 0.9;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* badge social scuro */
+.app-footer__social--dark {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e9eef5;
+  text-decoration: none;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+.app-footer__social--dark:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+/* logo footer (scuro) */
+.app-footer__logo--dark {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: radial-gradient(120% 120% at 10% 10%, #6c5ce7 0%, #5d4fe0 45%, #3b3dbb 100%);
+  color: #fff;
+  font-size: 18px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* utilità piccola */
+.opacity-85 {
+  opacity: 0.85;
 }

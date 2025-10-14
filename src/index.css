@@ -20,7 +20,7 @@ body {
   border: 1px solid #dfe3eb;
 }
 
-/* ====== DARK THEME: HEADER ====== */
+/* ====== HEADER ====== */
 .app-header--dark {
   background: linear-gradient(180deg, #0b0f19 0%, #121a2a 100%);
   color: #e9eef5;
@@ -45,7 +45,7 @@ body {
   box-shadow: 0 8px 18px rgba(18, 22, 33, 0.45);
 }
 
-/* ====== DARK THEME: FOOTER ====== */
+/* ====== FOOTER ====== */
 .app-footer--dark {
   background: linear-gradient(180deg, #0e1422 0%, #0b0f19 100%);
   color: #e9eef5;
@@ -60,7 +60,6 @@ body {
   background: rgba(255, 255, 255, 0.03);
 }
 
-/* link su sfondo scuro */
 .app-footer__link--dark {
   color: #e9eef5;
   text-decoration: none;
@@ -72,7 +71,6 @@ body {
   opacity: 0.9;
 }
 
-/* badge social scuro */
 .app-footer__social--dark {
   display: inline-grid;
   place-items: center;
@@ -92,7 +90,7 @@ body {
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
 }
 
-/* logo footer (scuro) */
+/* logo footer */
 .app-footer__logo--dark {
   display: inline-grid;
   place-items: center;
@@ -105,7 +103,49 @@ body {
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
 }
 
-/* utilità piccola */
 .opacity-85 {
   opacity: 0.85;
+}
+
+.object-fit-cover {
+  object-fit: cover;
+}
+
+.game-detail .card {
+  border-radius: 12px;
+}
+
+.game-detail dt {
+  font-weight: 600;
+}
+.game-detail dd {
+  margin-bottom: 0.5rem;
+}
+
+.ratio > * {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.ratio > img {
+  object-fit: cover;
+  display: block; 
+}
+
+.media-3x4 {
+  aspect-ratio: 3 / 4;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.125); 
+}
+
+.media-3x4 > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }

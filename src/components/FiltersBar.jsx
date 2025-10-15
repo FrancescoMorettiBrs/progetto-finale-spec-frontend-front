@@ -31,8 +31,8 @@ export default function FiltersBar({ query, onQueryChange, category, categories,
               Ordina per
             </label>
             <select id="sortBy" className="form-select" value={sortBy} onChange={(e) => onSortByChange(e.target.value)}>
-              <option value="title">Title</option>
-              <option value="category">Category</option>
+              <option value="title">Titolo</option>
+              <option value="category">Categoria</option>
             </select>
           </div>
           <div style={{ width: 110 }}>

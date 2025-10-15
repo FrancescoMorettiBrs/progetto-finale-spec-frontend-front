@@ -1,5 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useCompare } from "../context/CompareContext";
+import FavoriteToggle from "../components/FavoriteToggle";
 
 const BASE_URL = "http://localhost:3001/games";
 
@@ -57,6 +59,9 @@ export default function GameDetailPage() {
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { add } = useCompare();
+  const { isSelected, toggleSelect } = useCompare();
+  const selected = isSelected(game?.id);
 
   useEffect(() => {
     let isMounted = true;
@@ -135,9 +140,22 @@ export default function GameDetailPage() {
     <article className="game-detail">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2 className="h4 mb-0">{fmt(game.title)}</h2>
-        <Link to="/" className="btn btn-outline-secondary btn-sm">
-          ← Torna alla lista
-        </Link>
+        <div className="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            className={`btn btn-sm ${selected ? "btn-primary" : "btn-outline-primary"} btn-icon`}
+            onClick={() => toggleSelect({ id: game.id, title: game.title })}
+            aria-pressed={selected}
+            title={selected ? "Rimuovi dal comparatore" : "Aggiungi al comparatore"}
+          >
+            ⚔️
+          </button>
+
+          <FavoriteToggle game={game} variant="button" />
+          <Link to="/" className="btn btn-outline-secondary btn-sm">
+            ← Torna alla lista
+          </Link>
+        </div>
       </div>
 
       <div className="row g-4">

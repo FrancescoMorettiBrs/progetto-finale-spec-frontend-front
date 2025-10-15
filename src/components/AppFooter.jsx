@@ -2,7 +2,7 @@ export default function AppFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="app-footer app-footer--dark mt-4 text-light">
+    <footer className="app-footer app-footer--dark text-light">
       <div className="app-footer__main">
         <div className="container py-4">
           <div className="row g-4 align-items-start">
@@ -55,13 +55,13 @@ export default function AppFooter() {
               </ul>
 
               <div className="d-flex gap-2" aria-label="Social">
-                <a className="app-footer__social app-footer__social--dark" href="#" aria-label="Instagram">
+                <a className="app-footer__social app-footer__social--dark" href="" aria-label="Instagram">
                   📷
                 </a>
-                <a className="app-footer__social app-footer__social--dark" href="#" aria-label="Twitter/X">
+                <a className="app-footer__social app-footer__social--dark" href="" aria-label="Twitter/X">
                   ✖️
                 </a>
-                <a className="app-footer__social app-footer__social--dark" href="#" aria-label="YouTube">
+                <a className="app-footer__social app-footer__social--dark" href="" aria-label="YouTube">
                   ▶️
                 </a>
               </div>

@@ -4,6 +4,9 @@ import AppHeader from "./components/AppHeader";
 import AppFooter from "./components/AppFooter";
 import GamesPage from "./components/GamesPage";
 import GameDetailPage from "./pages/GameDetailPage";
+import { CompareProvider } from "./context/CompareContext";
+import ComparePage from "./pages/ComparePage";
+import { FavoritesProvider } from "./context/FavoritesContext";
 
 function NotFound() {
   return (
@@ -18,12 +21,17 @@ function NotFound() {
 
 export default function App() {
   return (
-    <Routes>
-      <Route element={<GuestLayout header={<AppHeader />} footer={<AppFooter />} />}>
-        <Route path="/" element={<GamesPage />} />
-        <Route path="/games/:id" element={<GameDetailPage />} />
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
+    <FavoritesProvider>
+      <CompareProvider>
+        <Routes>
+          <Route element={<GuestLayout header={<AppHeader />} footer={<AppFooter />} />}>
+            <Route path="/" element={<GamesPage />} />
+            <Route path="/games/:id" element={<GameDetailPage />} />
+            <Route path="/compare" element={<ComparePage />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </CompareProvider>
+    </FavoritesProvider>
   );
 }

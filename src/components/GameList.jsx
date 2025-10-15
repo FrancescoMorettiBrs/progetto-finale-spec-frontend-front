@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useCompare } from "../context/CompareContext";
 import FavoriteToggle from "./FavoriteToggle";
+import slugify from "../utils/slugify.js";
 
 export default function GameList({ items }) {
   const { add, isSelected, toggleSelect } = useCompare();
@@ -16,12 +17,13 @@ export default function GameList({ items }) {
         const key = hasId ? g.id : `${g.title}-${i}`;
         const category = g?.category ?? "—";
         const selected = hasId && isSelected(g.id);
+        const slug = g.slug ?? slugify(g.title)
 
         return (
           <li key={key} className="list-group-item d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center gap-2">
               {hasId ? (
-                <Link to={`/games/${g.id}`} className="fw-semibold text-decoration-none" title={g.title}>
+                <Link to={`/games/${slug}`} className="fw-semibold text-decoration-none" title={g.title}>
                   {g.title}
                 </Link>
               ) : (

@@ -15,7 +15,10 @@ export default function CompareBar() {
 
   const compareHref = useMemo(() => {
     if (!a || !b) return null;
-    const params = new URLSearchParams({ a: String(a.id), b: String(b.id) });
+    const params = new URLSearchParams({
+      a: String(a.slug || a.title), // di solito già slug
+      b: String(b.slug || b.title),
+    });
     return `/compare?${params.toString()}`;
   }, [a, b]);
 

@@ -1,7 +1,8 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useCompare } from "../context/CompareContext";
 import FavoriteToggle from "../components/FavoriteToggle";
+import slugify from "../utils/slugify.js";
 
 const BASE_URL = "http://localhost:3001/games";
 
@@ -54,53 +55,106 @@ const fmtPrice = (price, currency = "EUR") => {
   }
 };
 
+// unwrap generico per risposte tipo { success, game: {...} }
+const unwrap = (data) => data?.game || data?.item || data?.data || data;
+
 export default function GameDetailPage() {
-  const { id: routeId } = useParams(); // ID come stringa
+  const { id: routeId } = useParams(); // può essere ID o slug
+  const navigate = useNavigate();
+
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { add } = useCompare();
+
   const { isSelected, toggleSelect } = useCompare();
   const selected = isSelected(game?.id);
 
   useEffect(() => {
-    let isMounted = true;
+    let alive = true;
 
-    (async () => {
+    async function fetchJSON(url) {
+      const res = await fetch(url);
+      const ct = res.headers.get("content-type") || "";
+      if (!ct.includes("application/json")) throw new Error(`Risposta non JSON da ${url}`);
+      if (!res.ok) throw new Error(`Errore ${res.status} su ${url}`);
+      return res.json();
+    }
+
+    async function resolveIdFromSlug(slug) {
+      // 1) Tentativo diretto: /games?slug=...
       try {
-        if (!routeId) throw new Error("ID mancante nella URL");
-        if (isMounted) {
+        const data = await fetchJSON(`${BASE_URL}?slug=${encodeURIComponent(slug)}`);
+        const list = Array.isArray(data) ? data : data?.items || [];
+        const hit = list.find((x) => x?.slug === slug);
+        if (hit?.id != null) return hit.id;
+      } catch {
+        // Ignora e passa al fallback
+      }
+
+      // 2) Fallback: /games?search=...
+      try {
+        const q = slug.replace(/-/g, " ");
+        const light = await fetchJSON(`${BASE_URL}?search=${encodeURIComponent(q)}`);
+        const candidates = Array.isArray(light) ? light : [];
+        for (const c of candidates) {
+          try {
+            const fullData = await fetchJSON(`${BASE_URL}/${encodeURIComponent(c.id)}`);
+            const full = unwrap(fullData);
+            if (full?.slug === slug) return full.id;
+            // ultima chance se il backend non avesse 'slug'
+            if (!full?.slug && slugify(full?.title || "") === slug) return full.id;
+          } catch {
+            // ignora candidato rotto e continua
+          }
+        }
+      } catch {
+        // ignora e passa al fallback finale
+      }
+
+      // 3) Fallback definitivo: /games (lista completa) → match con slugify(title)
+      const all = await fetchJSON(BASE_URL);
+      const arr = Array.isArray(all) ? all : [];
+      const candidate = arr.find((x) => slugify(x?.title || "") === slug);
+      if (candidate?.id != null) return candidate.id;
+
+      throw new Error("Record non trovato");
+    }
+
+    async function load() {
+      try {
+        if (!routeId) throw new Error("Parametro mancante");
+        if (alive) {
           setLoading(true);
           setError("");
         }
 
-        const url = `${BASE_URL}/${encodeURIComponent(routeId)}`;
-        const res = await fetch(url);
+        // Se numerico, usa direttamente; altrimenti risolvi slug -> id
+        const looksNumeric = /^\d+$/.test(String(routeId));
+        const realId = looksNumeric ? routeId : await resolveIdFromSlug(String(routeId));
 
-        const ct = res.headers.get("content-type") || "";
-        if (!ct.includes("application/json")) {
-          throw new Error(`Risposta non JSON da ${url} (Content-Type: ${ct})`);
+        // Dettaglio per id (qui ottieni TUTTE le proprietà, incluso slug)
+        const data = await fetchJSON(`${BASE_URL}/${encodeURIComponent(realId)}`);
+        const record = normalizeGame(unwrap(data));
+        if (!alive) return;
+
+        setGame(record);
+
+        // Se sei arrivato con ID, sostituisci l'URL con lo slug (SEO/UX)
+        if (looksNumeric && record?.slug) {
+          navigate(`/games/${record.slug}`, { replace: true });
         }
-        if (res.status === 404) throw new Error("Record non trovato");
-        if (!res.ok) throw new Error(`Errore ${res.status}`);
-
-        const data = await res.json();
-
-        const record = data && (data.game || data.item || data.data) ? data.game || data.item || data.data : data;
-
-        const normalized = normalizeGame(record);
-        if (isMounted) setGame(normalized);
       } catch (e) {
-        if (isMounted) setError(e?.message || "Errore imprevisto");
+        if (alive) setError(e?.message || "Errore imprevisto");
       } finally {
-        if (isMounted) setLoading(false);
+        if (alive) setLoading(false);
       }
-    })();
+    }
 
+    load();
     return () => {
-      isMounted = false;
+      alive = false;
     };
-  }, [routeId]);
+  }, [routeId, navigate]);
 
   if (loading) {
     return (
@@ -168,7 +222,6 @@ export default function GameDetailPage() {
                 alt={game.title}
                 loading="lazy"
                 onError={(e) => {
-                  // fallback se l'URL non carica
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = "/images/placeholder-600x800.jpg";
                 }}

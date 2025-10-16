@@ -12,7 +12,7 @@ export default function AppFooter() {
                 <span className="app-footer__logo app-footer__logo--dark" aria-hidden="true">
                   🎮
                 </span>
-                <span className="fw-semibold">VideoLab</span>
+                <span className="fw-semibold">GameHub</span>
               </div>
             </div>
 
@@ -21,17 +21,17 @@ export default function AppFooter() {
               <h6 className="text-uppercase small fw-semibold mb-2 opacity-85">Link</h6>
               <ul className="list-unstyled mb-0 small">
                 <li>
-                  <a className="app-footer__link app-footer__link--dark" href="#">
+                  <a className="app-footer__link app-footer__link--dark" href="/">
                     Home
                   </a>
                 </li>
                 <li>
-                  <a className="app-footer__link app-footer__link--dark" href="#">
+                  <a className="app-footer__link app-footer__link--dark" href="/games">
                     Catalogo
                   </a>
                 </li>
                 <li>
-                  <a className="app-footer__link app-footer__link--dark" href="#">
+                  <a className="app-footer__link app-footer__link--dark" href="/info">
                     Informazioni
                   </a>
                 </li>
@@ -44,8 +44,8 @@ export default function AppFooter() {
               <ul className="list-unstyled mb-3 small">
                 <li className="d-flex align-items-center gap-2">
                   <span aria-hidden="true">📧</span>
-                  <a className="app-footer__link app-footer__link--dark" href="mailto:info@videoLab.com">
-                    info@videoLab.com
+                  <a className="app-footer__link app-footer__link--dark" href="mailto:info@gameHub.com">
+                    info@gameHub.com
                   </a>
                 </li>
                 <li className="d-flex align-items-center gap-2">
@@ -75,7 +75,7 @@ export default function AppFooter() {
 
       <div className="app-footer__bottom">
         <div className="container py-3 d-flex flex-column flex-sm-row gap-2 justify-content-between align-items-center small">
-          <span>© {year} VideoLab — Demo</span>
+          <span>© {year} GameHub — Demo</span>
           <span className="opacity-85">Built with React &amp; Bootstrap</span>
         </div>
       </div>

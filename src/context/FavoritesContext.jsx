@@ -4,6 +4,10 @@ const FavoritesContext = createContext(null);
 
 export function FavoritesProvider({ children }) {
   // Inizializza da localStorage
+  const [isOpen, setIsOpen] = useState(false);
+  const openDock = () => setIsOpen(true);
+  const closeDock = () => setIsOpen(false);
+  const toggleDock = () => setIsOpen((v) => !v);
   const [items, setItems] = useState(() => {
     try {
       const raw = localStorage.getItem("favorites:items");
@@ -53,7 +57,7 @@ export function FavoritesProvider({ children }) {
 
   const clear = () => setItems([]);
 
-  const value = useMemo(() => ({ items, add, remove, toggle, isFav, clear }), [items]);
+  const value = useMemo(() => ({ items, add, remove, toggle, isFav, clear, isOpen, openDock, closeDock, toggleDock }), [items, isOpen]);
 
   return <FavoritesContext.Provider value={value}>{children}</FavoritesContext.Provider>;
 }

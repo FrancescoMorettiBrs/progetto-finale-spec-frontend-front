@@ -7,7 +7,7 @@ export default function GameList({ items }) {
   const { add, isSelected, toggleSelect } = useCompare();
 
   if (!items || items.length === 0) {
-    return <p className="text-muted">Nessun gioco disponibile.</p>;
+    return <p className="color-w">Nessun gioco disponibile.</p>;
   }
 
   return (

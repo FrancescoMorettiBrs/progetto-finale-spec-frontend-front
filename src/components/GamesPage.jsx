@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import GameList from "./GameList";
 import useDebouncedValue from "../hooks/useDebounceValue";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useFavorites } from "../context/FavoritesContext";
 
 const BASE_URL = "http://localhost:3001/games";
 
@@ -10,6 +12,9 @@ export default function GamesPage() {
   const [category, setCategory] = useState(""); // filtro categoria
   const [sortBy, setSortBy] = useState("title"); // "title" | "category"
   const [dir, setDir] = useState("asc"); // "asc" | "desc"
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { openDock } = useFavorites();
 
   // stato dati
   const [games, setGames] = useState([]);
@@ -20,6 +25,15 @@ export default function GamesPage() {
   const debouncedSearch = useDebouncedValue(search, 450);
 
   const reqIdRef = useRef(0);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("open") === "favorites") {
+      openDock();
+      params.delete("open");
+      navigate({ search: params.toString() ? `?${params.toString()}` : "" }, { replace: true });
+    }
+  }, [location.search, navigate, openDock]);
 
   useEffect(() => {
     let isMounted = true;
@@ -75,18 +89,12 @@ export default function GamesPage() {
       {/* Filtro / controlli */}
       <div className="row g-3 mb-3 align-items-end">
         <div className="col-12 col-md-6">
-          <label className="form-label">Cerca per titolo</label>
-          <input
-            type="search"
-            className="form-control"
-            placeholder="Es. Elden Ring"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <label className="form-label color-w">Cerca per titolo</label>
+          <input type="search" className="form-control" placeholder="Es. Elden Ring" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
 
         <div className="col-6 col-md-3">
-          <label className="form-label">Categoria</label>
+          <label className="form-label color-w">Categoria</label>
           <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
             <option value="">Tutte</option>
             <option value="Action">Action</option>
@@ -100,15 +108,15 @@ export default function GamesPage() {
         </div>
 
         <div className="col-3 col-md-2">
-          <label className="form-label">Ordina per</label>
+          <label className="form-label color-w">Ordina per</label>
           <select className="form-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="title">Title</option>
-            <option value="category">Category</option>
+            <option value="title">Titolo</option>
+            <option value="category">Categoria</option>
           </select>
         </div>
 
         <div className="col-3 col-md-1">
-          <label className="form-label">Dir.</label>
+          <label className="form-label color-w">Dir.</label>
           <select className="form-select" value={dir} onChange={(e) => setDir(e.target.value)}>
             <option value="asc">A → Z</option>
             <option value="desc">Z → A</option>

@@ -1,20 +1,54 @@
-export default function AppHeader() {
-  return (
-    <header className="app-header app-header--dark sticky-top shadow-sm text-light">
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useFavorites } from "../context/FavoritesContext";
 
-      {/* barra principale */}
-      <div className="app-header__main">
-        <div className="container py-3 d-flex align-items-center justify-content-between">
-          {/* Brand */}
-          <div className="d-flex align-items-center gap-2">
-            <span className="app-logo app-logo--dark" aria-hidden="true">
-              🎮
-            </span>
-            <div className="d-flex flex-column">
-              <span className="fw-semibold fs-5">VideoLab</span>
-            </div>
-          </div>
-        </div>
+export default function AppHeader() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { openDock } = useFavorites();
+
+  const handleOpenFavorites = (e) => {
+    e.preventDefault();
+    if (location.pathname.startsWith("/games")) {
+      openDock();
+    } else {
+      navigate("/games?open=favorites");
+    }
+  };
+
+  return (
+    <header className="app-header navbar navbar-expand-md navbar-dark bg-dark sticky-top shadow-sm">
+      <div className="container">
+        <Link to="/" className="navbar-brand d-flex align-items-center gap-2">
+          <span role="img" aria-label="Gamepad">
+            🎮
+          </span>
+          <span>Game Hub</span>
+        </Link>
+
+        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        <nav id="mainNav" className="collapse navbar-collapse">
+          <ul className="navbar-nav ms-auto">
+            <li className="nav-item">
+              <NavLink to="/" end className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}>
+                Home
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink to="/games" className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}>
+                Catalogo
+              </NavLink>
+            </li>
+
+            <li className="nav-item">
+              <a href="#" className="nav-link" onClick={handleOpenFavorites} title="Apri preferiti">
+                Preferiti
+              </a>
+            </li>
+          </ul>
+        </nav>
       </div>
     </header>
   );

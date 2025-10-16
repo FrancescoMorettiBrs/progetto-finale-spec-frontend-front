@@ -110,8 +110,8 @@ export default function ComparePage() {
   return (
     <section>
       <div className="d-flex align-items-center justify-content-between mb-3">
-        <h2 className="h4 mb-0">Confronto giochi</h2>
-        <Link className="btn btn-outline-secondary btn-sm" to="/">
+        <h2 className="mb-0 color-w">Confronto giochi</h2>
+        <Link className="btn btn-outline-secondary btn-sm" to="/games">
           ← Torna al catalogo
         </Link>
       </div>

@@ -7,12 +7,14 @@ import GameDetailPage from "./pages/GameDetailPage";
 import { CompareProvider } from "./context/CompareContext";
 import ComparePage from "./pages/ComparePage";
 import { FavoritesProvider } from "./context/FavoritesContext";
+import HomePage from "./pages/HomePage";
+import InfoPage from "./pages/InfoPage";
 
 function NotFound() {
   return (
     <div className="py-5">
-      <h2 className="h4 mb-3">Pagina non trovata</h2>
-      <a className="btn btn-primary" href="/">
+      <h2 className="color-w mb-3">Pagina non trovata</h2>
+      <a className="btn btn-primary" href="/games">
         Torna alla lista
       </a>
     </div>
@@ -25,10 +27,12 @@ export default function App() {
       <CompareProvider>
         <Routes>
           <Route element={<GuestLayout header={<AppHeader />} footer={<AppFooter />} />}>
-            <Route path="/" element={<GamesPage />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/games" element={<GamesPage />} />
             <Route path="/games/:id" element={<GameDetailPage />} />
             <Route path="/compare" element={<ComparePage />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/info" element={<InfoPage/>} />
+            <Route path="*" element={<NotFound />} />           
           </Route>
         </Routes>
       </CompareProvider>

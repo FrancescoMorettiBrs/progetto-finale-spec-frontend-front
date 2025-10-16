@@ -43,7 +43,7 @@ export function CompareProvider({ children }) {
     setSelected((prev) => {
       const exists = prev.some((x) => String(x.id) === String(item.id));
       if (exists) return prev.filter((x) => String(x.id) !== String(item.id));
-      const snapshot = { id: item.id, title: item.title, slug: item.slug ?? slugify(item.title) }; // 👈
+      const snapshot = { id: item.id, title: item.title, slug: item.slug ?? slugify(item.title) };
       const next = [...prev, snapshot];
       return next.slice(-2);
     });

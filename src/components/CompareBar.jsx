@@ -53,7 +53,7 @@ export default function CompareBar() {
         <div className="d-flex align-items-center justify-content-between gap-3">
           <div className="d-flex align-items-center gap-3 flex-wrap">
             <Slot item={a} onRemove={() => a && remove(a.id)} />
-            <span className="text-body-secondary">vs</span>
+            <span className="text-body-secondary">⚔️</span>
             <Slot item={b} onRemove={() => b && remove(b.id)} />
           </div>
 
@@ -77,7 +77,7 @@ function Slot({ item, onRemove }) {
   if (!item) {
     return (
       <div className="compare-slot empty">
-        <span className="text-body-secondary">Seleziona un gioco</span>
+        <span>Seleziona un gioco</span>
       </div>
     );
   }

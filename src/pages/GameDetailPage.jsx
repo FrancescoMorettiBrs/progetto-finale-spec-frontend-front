@@ -179,7 +179,7 @@ export default function GameDetailPage() {
     return (
       <div className="text-center py-5">
         <h2 className="h5 mb-3">Gioco non trovato</h2>
-        <Link className="btn btn-primary" to="/">
+        <Link className="btn btn-primary" to="/games">
           Torna alla lista
         </Link>
       </div>
@@ -193,7 +193,7 @@ export default function GameDetailPage() {
   return (
     <article className="game-detail">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="h4 mb-0">{fmt(game.title)}</h2>
+        <h2 className="mb-0 color-w">{fmt(game.title)}</h2>
         <div className="d-flex align-items-center gap-2">
           <button
             type="button"
@@ -206,7 +206,7 @@ export default function GameDetailPage() {
           </button>
 
           <FavoriteToggle game={game} variant="button" />
-          <Link to="/" className="btn btn-outline-secondary btn-sm">
+          <Link to="/games" className="btn btn-outline-secondary btn-sm">
             ← Torna alla lista
           </Link>
         </div>

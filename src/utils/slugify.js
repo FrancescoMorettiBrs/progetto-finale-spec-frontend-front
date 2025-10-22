@@ -1,8 +1,9 @@
 export default function slugify(str = "") {
-  return String(str)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+  return str
+    .normalize("NFD") // separa lettere e diacritici
+    .replace(/[\u0300-\u036f]/g, "") // rimuove i diacritici (es. ö -> o)
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-") // spazi e simboli -> trattino
+    .replace(/^-+|-+$/g, ""); // togli trattini ai bordi
 }

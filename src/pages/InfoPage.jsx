@@ -1,6 +1,12 @@
 import { Link } from "react-router-dom";
 
 export default function InfoPage() {
+  const infos = [
+    { icon: "🔎", title: "Ricerca & Filtri", text: "Ricerca ottimizzata, filtro per categoria e ordinamento A→Z / Z→A." },
+    { icon: "⭐", title: "Preferiti", text: "Aggiungi/rimuovi in qualunque pagina. Persistenza locale." },
+    { icon: "🧭", title: "Navigazione intuitiva", text: "Link chiari e memorabili: trovi i giochi al volo e li condividi in un attimo." },
+    { icon: "⚡", title: "Veloce come un power-up", text: "Risultati immediati e interfaccia fluidissima: cerchi, filtri e trovi in un lampo." },
+  ];
   return (
     <section className="info-page text-light">
       <div className="container py-5 position-relative">
@@ -61,12 +67,7 @@ export default function InfoPage() {
 
         {/* Feature */}
         <div className="row g-4 mb-4">
-          {[
-            { icon: "🔎", title: "Ricerca & Filtri", text: "Ricerca ottimizzata, filtro per categoria e ordinamento A→Z / Z→A." },
-            { icon: "⭐", title: "Preferiti", text: "Aggiungi/rimuovi in qualunque pagina. Persistenza locale." },
-            { icon: "🧭", title: "Navigazione intuitiva", text: "Link chiari e memorabili: trovi i giochi al volo e li condividi in un attimo." },
-            { icon: "⚡", title: "Veloce come un power-up", text: "Risultati immediati e interfaccia fluidissima: cerchi, filtri e trovi in un lampo." },
-          ].map((f, i) => (
+          {infos.map((f, i) => (
             <div key={i} className="col-12 col-md-6 col-lg-3">
               <div className="card h-100 bg-dark-subtle info-card shadow-sm">
                 <div className="card-body">

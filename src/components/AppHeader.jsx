@@ -8,7 +8,7 @@ export default function AppHeader() {
 
   const handleOpenFavorites = (e) => {
     e.preventDefault();
-    if (location.pathname.startsWith("/games")) {
+    if (location.pathname.startsWith("/")) {
       openDock();
     } else {
       navigate("/games?open=favorites");

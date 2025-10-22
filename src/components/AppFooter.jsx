@@ -54,17 +54,6 @@ export default function AppFooter() {
                 </li>
               </ul>
 
-              <div className="d-flex gap-2" aria-label="Social">
-                <a className="app-footer__social app-footer__social--dark" href="" aria-label="Instagram">
-                  📷
-                </a>
-                <a className="app-footer__social app-footer__social--dark" href="" aria-label="Twitter/X">
-                  ✖️
-                </a>
-                <a className="app-footer__social app-footer__social--dark" href="" aria-label="YouTube">
-                  ▶️
-                </a>
-              </div>
             </div>
           </div>
         </div>

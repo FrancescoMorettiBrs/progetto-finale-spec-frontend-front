@@ -9,17 +9,7 @@ import ComparePage from "./pages/ComparePage";
 import { FavoritesProvider } from "./context/FavoritesContext";
 import HomePage from "./pages/HomePage";
 import InfoPage from "./pages/InfoPage";
-
-function NotFound() {
-  return (
-    <div className="py-5">
-      <h2 className="color-w mb-3">Pagina non trovata</h2>
-      <a className="btn btn-primary" href="/games">
-        Torna alla lista
-      </a>
-    </div>
-  );
-}
+import PageNotFound from "./pages/PageNotFound";
 
 export default function App() {
   return (
@@ -31,8 +21,8 @@ export default function App() {
             <Route path="/games" element={<GamesPage />} />
             <Route path="/games/:id" element={<GameDetailPage />} />
             <Route path="/compare" element={<ComparePage />} />
-            <Route path="/info" element={<InfoPage/>} />
-            <Route path="*" element={<NotFound />} />           
+            <Route path="/info" element={<InfoPage />} />
+            <Route path="*" element={<PageNotFound />} />
           </Route>
         </Routes>
       </CompareProvider>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import GameList from "./GameList";
 import useDebouncedValue from "../hooks/useDebounceValue";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -7,25 +7,23 @@ import { useFavorites } from "../context/FavoritesContext";
 const BASE_URL = "http://localhost:3001/games";
 
 export default function GamesPage() {
-  // stati UI
-  const [search, setSearch] = useState(""); // testo immediato dell'input
-  const [category, setCategory] = useState(""); // filtro categoria
-  const [sortBy, setSortBy] = useState("title"); // "title" | "category"
-  const [dir, setDir] = useState("asc"); // "asc" | "desc"
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { openDock } = useFavorites();
+  // UI
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [sortBy, setSortBy] = useState("title");
+  const [dir, setDir] = useState("asc");
 
-  // stato dati
+  // Data
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Applichiamo il debounce SOLO alla ricerca (non a categoria/ordinamento)
-  const debouncedSearch = useDebouncedValue(search, 450);
+  const debouncedSearch = useDebouncedValue(search, 500);
+  const { openDock } = useFavorites();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const reqIdRef = useRef(0);
-
+  // Apri dock se ?open=favorites (e pulisci la query)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get("open") === "favorites") {
@@ -33,60 +31,47 @@ export default function GamesPage() {
       params.delete("open");
       navigate({ search: params.toString() ? `?${params.toString()}` : "" }, { replace: true });
     }
-  }, [location.search, navigate, openDock]);
+  }, [location.search, openDock, navigate]);
 
+  // Carica + ordina
   useEffect(() => {
-    let isMounted = true;
-    const myReqId = ++reqIdRef.current;
-
+    let alive = true;
     (async () => {
       try {
         setLoading(true);
         setError("");
 
-        // Costruiamo la query (?search, ?category)
-        const params = new URLSearchParams();
-        if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
-        if (category) params.set("category", category);
+        const qs = new URLSearchParams();
+        if (debouncedSearch) qs.set("search", debouncedSearch);
+        if (category) qs.set("category", category);
 
-        const url = `${BASE_URL}${params.toString() ? `?${params.toString()}` : ""}`;
-        const res = await fetch(url);
-
+        const res = await fetch(`${BASE_URL}${qs.size ? `?${qs}` : ""}`);
         if (!res.ok) throw new Error(`Errore ${res.status}`);
-        const ct = res.headers.get("content-type") || "";
-        if (!ct.includes("application/json")) throw new Error("Risposta non JSON");
 
-        const data = await res.json(); // lista "leggera" { id, title, category, ... }
+        const data = await res.json();
+        if (!alive) return;
 
-        // Se nel frattempo è partita un’altra richiesta, ignora questa risposta
-        if (!isMounted || myReqId !== reqIdRef.current) return;
-
-        const sorted = Array.isArray(data) ? [...data] : [];
-        sorted.sort((a, b) => {
-          const va = String(a?.[sortBy] ?? "").toLowerCase();
-          const vb = String(b?.[sortBy] ?? "").toLowerCase();
-          if (va < vb) return dir === "asc" ? -1 : 1;
-          if (va > vb) return dir === "asc" ? 1 : -1;
-          return 0;
+        const sorted = [...data].sort((a, b) => {
+          const A = String(a?.[sortBy] ?? "").toLowerCase();
+          const B = String(b?.[sortBy] ?? "").toLowerCase();
+          return dir === "asc" ? A.localeCompare(B) : B.localeCompare(A);
         });
 
         setGames(sorted);
       } catch (e) {
-        if (isMounted) setError(e?.message || "Errore imprevisto");
+        if (alive) setError(e.message || "Errore imprevisto");
       } finally {
-        if (isMounted) setLoading(false);
+        if (alive) setLoading(false);
       }
     })();
-
     return () => {
-      isMounted = false;
+      alive = false;
     };
-    // Rinfresca quando cambia: ricerca (debounced)
   }, [debouncedSearch, category, sortBy, dir]);
 
   return (
     <section className="games-page">
-      {/* Filtro / controlli */}
+      {/* Filtri */}
       <div className="row g-3 mb-3 align-items-end">
         <div className="col-12 col-md-6">
           <label className="form-label color-w">Cerca per titolo</label>

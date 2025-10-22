@@ -6,60 +6,41 @@ import slugify from "../utils/slugify.js";
 
 const BASE_URL = "http://localhost:3001/games";
 
-const toNum = (v) => {
-  if (typeof v === "number") return v;
-  if (typeof v === "string") {
-    const s = v.replace(",", ".").trim();
-    const n = Number(s);
-    return Number.isFinite(n) ? n : NaN;
-  }
-  return NaN;
-};
+// --- Helper ---
+async function fetchJSON(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Errore ${res.status} su ${url}`);
+  return res.json();
+}
 
-const toArray = (v) =>
-  Array.isArray(v)
-    ? v
-    : typeof v === "string"
-    ? v
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [];
+async function fetchById(id) {
+  const data = await fetchJSON(`${BASE_URL}/${encodeURIComponent(id)}`);
+  return data.game || data;
+}
 
-const normalizeGame = (g) => {
-  if (!g || typeof g !== "object") return g;
-  return {
-    ...g,
-    price: toNum(g.price),
-    stock: toNum(g.stock),
-    modes: toArray(g.modes),
-    languagesAudio: toArray(g.languagesAudio),
-    languagesText: toArray(g.languagesText),
-  };
-};
-
-/* ---------- Formatter ---------- */
-const fmt = (v, fallback = "—") => {
-  if (v == null) return fallback;
-  const s = String(v).trim();
-  return s === "" ? fallback : s;
-};
-
-const fmtPrice = (price, currency = "EUR") => {
-  const n = toNum(price);
-  if (!Number.isFinite(n)) return "—";
+async function resolveIdBySlug(slug) {
   try {
-    return new Intl.NumberFormat("it-IT", { style: "currency", currency }).format(n);
-  } catch {
-    return `${n} ${currency}`;
+    const data = await fetchJSON(`${BASE_URL}?slug=${encodeURIComponent(slug)}`);
+    const arr = Array.isArray(data) ? data : [];
+    const findSlug = arr.find((g) => g?.slug === slug);
+    if (findSlug?.id != null) return findSlug.id;
+  } catch (err) {
+    console.err(err);
   }
-};
 
-// unwrap generico per risposte tipo { success, game: {...} }
-const unwrap = (data) => data?.game || data?.item || data?.data || data;
+  const all = await fetchJSON(BASE_URL);
+  const list = Array.isArray(all) ? all : [];
+  const exact = list.find((g) => g?.slug === slug);
+  if (exact?.id != null) return exact.id;
+
+  const byTitle = list.find((g) => slugify(g?.title || "") === slug);
+  if (byTitle?.id != null) return byTitle.id;
+
+  throw new Error("Gioco non trovato");
+}
 
 export default function GameDetailPage() {
-  const { id: routeId } = useParams(); // può essere ID o slug
+  const { id: routeId } = useParams();
   const navigate = useNavigate();
 
   const [game, setGame] = useState(null);
@@ -72,85 +53,29 @@ export default function GameDetailPage() {
   useEffect(() => {
     let alive = true;
 
-    async function fetchJSON(url) {
-      const res = await fetch(url);
-      const ct = res.headers.get("content-type") || "";
-      if (!ct.includes("application/json")) throw new Error(`Risposta non JSON da ${url}`);
-      if (!res.ok) throw new Error(`Errore ${res.status} su ${url}`);
-      return res.json();
-    }
-
-    async function resolveIdFromSlug(slug) {
-      // 1) Tentativo diretto: /games?slug=...
-      try {
-        const data = await fetchJSON(`${BASE_URL}?slug=${encodeURIComponent(slug)}`);
-        const list = Array.isArray(data) ? data : data?.items || [];
-        const hit = list.find((x) => x?.slug === slug);
-        if (hit?.id != null) return hit.id;
-      } catch {
-        // Ignora e passa al fallback
-      }
-
-      // 2) Fallback: /games?search=...
-      try {
-        const q = slug.replace(/-/g, " ");
-        const light = await fetchJSON(`${BASE_URL}?search=${encodeURIComponent(q)}`);
-        const candidates = Array.isArray(light) ? light : [];
-        for (const c of candidates) {
-          try {
-            const fullData = await fetchJSON(`${BASE_URL}/${encodeURIComponent(c.id)}`);
-            const full = unwrap(fullData);
-            if (full?.slug === slug) return full.id;
-            // ultima chance se il backend non avesse 'slug'
-            if (!full?.slug && slugify(full?.title || "") === slug) return full.id;
-          } catch {
-            // ignora candidato rotto e continua
-          }
-        }
-      } catch {
-        // ignora e passa al fallback finale
-      }
-
-      // 3) Fallback definitivo: /games (lista completa) → match con slugify(title)
-      const all = await fetchJSON(BASE_URL);
-      const arr = Array.isArray(all) ? all : [];
-      const candidate = arr.find((x) => slugify(x?.title || "") === slug);
-      if (candidate?.id != null) return candidate.id;
-
-      throw new Error("Record non trovato");
-    }
-
-    async function load() {
+    (async () => {
       try {
         if (!routeId) throw new Error("Parametro mancante");
-        if (alive) {
-          setLoading(true);
-          setError("");
-        }
+        setLoading(true);
+        setError("");
 
-        // Se numerico, usa direttamente; altrimenti risolvi slug -> id
-        const looksNumeric = /^\d+$/.test(String(routeId));
-        const realId = looksNumeric ? routeId : await resolveIdFromSlug(String(routeId));
-
-        // Dettaglio per id (qui ottieni TUTTE le proprietà, incluso slug)
-        const data = await fetchJSON(`${BASE_URL}/${encodeURIComponent(realId)}`);
-        const record = normalizeGame(unwrap(data));
+        const isNumeric = /^\d+$/.test(String(routeId));
+        const id = isNumeric ? routeId : await resolveIdBySlug(String(routeId));
+        const full = await fetchById(id);
         if (!alive) return;
 
-        setGame(record);
+        setGame(full);
 
-        // Se sei arrivato con ID, sostituisci l'URL con lo slug (SEO/UX)
-        if (looksNumeric && record?.slug) {
-          navigate(`/games/${record.slug}`, { replace: true });
+        if (isNumeric && full?.slug) {
+          navigate(`/games/${full.slug}`, { replace: true });
         }
       } catch (e) {
         if (alive) setError(e?.message || "Errore imprevisto");
       } finally {
         if (alive) setLoading(false);
       }
-    }
+    })();
 
-    load();
     return () => {
       alive = false;
     };
@@ -166,12 +91,19 @@ export default function GameDetailPage() {
 
   if (error) {
     return (
-      <div className="alert alert-danger d-flex justify-content-between align-items-center" role="alert">
-        <span>{error}</span>
-        <button className="btn btn-light btn-sm" onClick={() => location.reload()}>
-          Riprova
-        </button>
-      </div>
+      <>
+        <div className="alert alert-danger d-flex justify-content-between align-items-center" role="alert">
+          <span>{error}</span>
+          <button className="btn btn-light btn-sm" onClick={() => location.reload()}>
+            Riprova
+          </button>
+        </div>
+        <div>
+          <Link className="btn btn-primary" to="/games">
+            Torna alla lista
+          </Link>
+        </div>
+      </>
     );
   }
 
@@ -186,19 +118,15 @@ export default function GameDetailPage() {
     );
   }
 
-  const modes = toArray(game.modes);
-  const langsAudio = toArray(game.languagesAudio);
-  const langsText = toArray(game.languagesText);
-
   return (
     <article className="game-detail">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="mb-0 color-w">{fmt(game.title)}</h2>
+        <h2 className="mb-0 color-w">{game.title ?? "—"}</h2>
         <div className="d-flex align-items-center gap-2">
           <button
             type="button"
             className={`btn btn-sm ${selected ? "btn-primary" : "btn-outline-primary"} btn-icon`}
-            onClick={() => toggleSelect({ id: game.id, title: game.title })}
+            onClick={() => toggleSelect({ id: game.id, title: game.title, slug: game.slug })}
             aria-pressed={selected}
             title={selected ? "Rimuovi dal comparatore" : "Aggiungi al comparatore"}
           >
@@ -216,13 +144,12 @@ export default function GameDetailPage() {
         {/* Immagine */}
         <div className="col-12 col-md-4">
           <div className="media-3x4">
-            {typeof game.image === "string" && game.image.trim() ? (
+            {game.image ? (
               <img
                 src={game.image}
                 alt={game.title}
                 loading="lazy"
                 onError={(e) => {
-                  e.currentTarget.onerror = null;
                   e.currentTarget.src = "/images/placeholder-600x800.jpg";
                 }}
               />
@@ -239,29 +166,29 @@ export default function GameDetailPage() {
               <div className="d-flex flex-wrap gap-2 mb-3">
                 {game.category && <span className="badge bg-secondary-subtle text-secondary-emphasis">{game.category}</span>}
                 {game.pegi != null && <span className="badge bg-dark">PEGI {game.pegi}</span>}
-                {modes.length > 0 && <span className="badge bg-info-subtle text-info-emphasis">{modes.join(" · ")}</span>}
+                {game.modes?.length > 0 && <span className="badge bg-info-subtle text-info-emphasis">{game.modes.join(" · ")}</span>}
               </div>
 
               <dl className="row mb-0">
                 <dt className="col-sm-4">Prezzo</dt>
-                <dd className="col-sm-8">{fmtPrice(game.price, game.currency)}</dd>
+                <dd className="col-sm-8">{game.price} €</dd>
 
                 <dt className="col-sm-4">Piattaforme</dt>
-                <dd className="col-sm-8">{fmt(game.platform)}</dd>
+                <dd className="col-sm-8">{game.platform ?? "—"}</dd>
 
                 <dt className="col-sm-4">Uscita</dt>
-                <dd className="col-sm-8">{fmt(game.releaseDate)}</dd>
+                <dd className="col-sm-8">{game.releaseDate ?? "—"}</dd>
 
                 <dt className="col-sm-4">Developer</dt>
-                <dd className="col-sm-8">{fmt(game.developer)}</dd>
+                <dd className="col-sm-8">{game.developer ?? "—"}</dd>
 
                 <dt className="col-sm-4">Publisher</dt>
-                <dd className="col-sm-8">{fmt(game.publisher)}</dd>
+                <dd className="col-sm-8">{game.publisher ?? "—"}</dd>
 
                 <dt className="col-sm-4">Disponibilità</dt>
-                <dd className="col-sm-8">{Number.isFinite(toNum(game.stock)) ? `${toNum(game.stock)} copie` : "—"}</dd>
+                <dd className="col-sm-8">{game.stock ? `${game.stock} copie` : "—"}</dd>
 
-                {Array.isArray(game.tags) && game.tags.length > 0 && (
+                {game.tags?.length > 0 && (
                   <>
                     <dt className="col-sm-4">Tag</dt>
                     <dd className="col-sm-8">
@@ -276,17 +203,17 @@ export default function GameDetailPage() {
                   </>
                 )}
 
-                {langsAudio.length > 0 && (
+                {game.languagesAudio?.length > 0 && (
                   <>
                     <dt className="col-sm-4">Audio</dt>
-                    <dd className="col-sm-8">{langsAudio.join(", ")}</dd>
+                    <dd className="col-sm-8">{game.languagesAudio.join(", ")}</dd>
                   </>
                 )}
 
-                {langsText.length > 0 && (
+                {game.languagesText?.length > 0 && (
                   <>
                     <dt className="col-sm-4">Testo</dt>
-                    <dd className="col-sm-8">{langsText.join(", ")}</dd>
+                    <dd className="col-sm-8">{game.languagesText.join(", ")}</dd>
                   </>
                 )}
               </dl>

@@ -12,7 +12,6 @@ export default function GuestLayout({ header, footer }) {
   return (
     <div className="app-shell-grid">
       {header}
-
       {onFullBleed ? (
         <main className="py-0">
           <Outlet />
@@ -22,10 +21,8 @@ export default function GuestLayout({ header, footer }) {
           <Outlet />
         </main>
       )}
-
       {showCompareBar && <CompareBar />}
       {footer}
-
       <FavoritesDock />
     </div>
   );

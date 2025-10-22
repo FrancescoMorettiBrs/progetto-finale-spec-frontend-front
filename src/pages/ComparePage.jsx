@@ -1,65 +1,32 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
-import slugify from "../utils/slugify.js";
+import slugify from "../utils/slugify";
 
 const BASE_URL = "http://localhost:3001/games";
-const unwrap = (d) => d?.game || d?.item || d?.data || d;
 
-const toNum = (v) => (typeof v === "number" ? v : Number((v ?? "").toString().replace(",", ".")));
-const toArray = (v) =>
-  Array.isArray(v)
-    ? v
-    : typeof v === "string"
-    ? v
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [];
-const normalize = (g) => (!g ? g : { ...g, price: toNum(g.price), stock: toNum(g.stock), modes: toArray(g.modes), languagesAudio: toArray(g.languagesAudio), languagesText: toArray(g.languagesText) });
+async function fetchListBySlug(slug) {
+  const res = await fetch(`${BASE_URL}?slug=${encodeURIComponent(slug)}`);
+  if (!res.ok) throw new Error(`Errore ${res.status} su lista per slug "${slug}"`);
+  const data = await res.json();
 
-async function fetchJSON(url) {
-  const res = await fetch(url);
-  const ct = res.headers.get("content-type") || "";
-  if (!ct.includes("application/json")) throw new Error(`Risposta non JSON da ${url}`);
-  if (!res.ok) throw new Error(`Errore ${res.status} su ${url}`);
-  return res.json();
+  const arr = Array.isArray(data) ? data : [];
+  const hit = arr.find((g) => (g?.slug ?? slugify(g?.title || "")) === slug);
+  if (!hit) throw new Error(`Nessun gioco trovato per slug "${slug}"`);
+  return hit;
 }
 
-// Risolve uno slug in id (prova ?slug=, poi ?search=, poi lista intera)
-async function resolveIdFromSlug(slug) {
-  try {
-    const found = await fetchJSON(`${BASE_URL}?slug=${encodeURIComponent(slug)}`);
-    const list = Array.isArray(found) ? found : found?.items || [];
-    const hit = list.find((x) => x?.slug === slug);
-    if (hit?.id != null) return hit.id;
-  } catch {}
-
-  try {
-    const q = slug.replace(/-/g, " ");
-    const light = await fetchJSON(`${BASE_URL}?search=${encodeURIComponent(q)}`);
-    const arr = Array.isArray(light) ? light : [];
-    for (const c of arr) {
-      try {
-        const full = unwrap(await fetchJSON(`${BASE_URL}/${encodeURIComponent(c.id)}`));
-        if (full?.slug === slug) return full.id;
-        if (!full?.slug && slugify(full?.title || "") === slug) return full.id;
-      } catch {}
-    }
-  } catch {}
-
-  const all = await fetchJSON(BASE_URL);
-  const arr2 = Array.isArray(all) ? all : [];
-  const cand = arr2.find((x) => slugify(x?.title || "") === slug);
-  if (cand?.id != null) return cand.id;
-
-  throw new Error(`Record non trovato per slug "${slug}"`);
+async function fetchDetailById(id) {
+  const res = await fetch(`${BASE_URL}/${encodeURIComponent(id)}`);
+  if (!res.ok) throw new Error(`Errore ${res.status} su dettaglio id ${id}`);
+  const data = await res.json();
+  return data.game || data;
 }
 
 export default function ComparePage() {
   const { search } = useLocation();
   const params = useMemo(() => new URLSearchParams(search), [search]);
-  const aParam = params.get("a");
-  const bParam = params.get("b");
+  const aSlug = params.get("a");
+  const bSlug = params.get("b");
 
   const [left, setLeft] = useState(null);
   const [right, setRight] = useState(null);
@@ -71,21 +38,25 @@ export default function ComparePage() {
 
     (async () => {
       try {
-        if (!aParam || !bParam) throw new Error("Parametri mancanti: servono 'a' e 'b'.");
+        if (!aSlug || !bSlug) throw new Error("Parametri mancanti: servono 'a' e 'b'.");
+        if (aSlug === bSlug) throw new Error("Seleziona due giochi diversi.");
 
         setLoading(true);
         setError("");
 
-        const aIsNum = /^\d+$/.test(aParam);
-        const bIsNum = /^\d+$/.test(bParam);
-        const aId = aIsNum ? aParam : await resolveIdFromSlug(aParam);
-        const bId = bIsNum ? bParam : await resolveIdFromSlug(bParam);
+        const aListItem = await fetchListBySlug(aSlug);
+        const bListItem = await fetchListBySlug(bSlug);
 
-        const [da, db] = await Promise.all([fetchJSON(`${BASE_URL}/${encodeURIComponent(aId)}`), fetchJSON(`${BASE_URL}/${encodeURIComponent(bId)}`)]);
+        const [aDetail, bDetail] = await Promise.all([fetchDetailById(aListItem.id), fetchDetailById(bListItem.id)]);
+
+        // Anti-duplicato finale: se per qualsiasi motivo arrivano uguali
+        if (aDetail?.id === bDetail?.id) {
+          throw new Error("Seleziona due giochi diversi.");
+        }
 
         if (!alive) return;
-        setLeft(normalize(unwrap(da)));
-        setRight(normalize(unwrap(db)));
+        setLeft(aDetail);
+        setRight(bDetail);
       } catch (e) {
         if (alive) setError(e?.message || "Errore imprevisto");
       } finally {
@@ -96,14 +67,15 @@ export default function ComparePage() {
     return () => {
       alive = false;
     };
-  }, [aParam, bParam]);
+  }, [aSlug, bSlug]);
 
-  if (loading)
+  if (loading) {
     return (
       <div className="d-flex justify-content-center my-5">
         <div className="spinner-border" />
       </div>
     );
+  }
   if (error) return <div className="alert alert-danger">{error}</div>;
   if (!left || !right) return <div className="alert alert-warning">Impossibile caricare i dati di confronto.</div>;
 
@@ -135,42 +107,76 @@ export default function ComparePage() {
       <div className="table-responsive">
         <table className="table align-middle">
           <tbody>
-            <Row label="Prezzo" va={left} vb={right} render={(g) => priceFmt(g.price, g.currency || "EUR")} />
-            <Row label="Piattaforme" va={left} vb={right} field="platform" />
-            <Row label="Uscita" va={left} vb={right} field="releaseDate" />
-            <Row label="PEGI" va={left} vb={right} field="pegi" />
-            <Row label="Modalità" va={left} vb={right} render={(g) => (Array.isArray(g.modes) ? g.modes.join(" · ") : g.modes || "—")} />
-            <Row label="Developer" va={left} vb={right} field="developer" />
-            <Row label="Publisher" va={left} vb={right} field="publisher" />
-            <Row label="Disponibilità" va={left} vb={right} render={(g) => (Number.isFinite(toNum(g.stock)) ? `${toNum(g.stock)} pezzi` : "—")} />
-            <Row label="Tag" va={left} vb={right} render={(g) => (Array.isArray(g.tags) ? g.tags.join(", ") : g.tags || "—")} />
-            <Row label="Audio" va={left} vb={right} render={(g) => (Array.isArray(g.languagesAudio) ? g.languagesAudio.join(", ") : g.languagesAudio || "—")} />
-            <Row label="Testo" va={left} vb={right} render={(g) => (Array.isArray(g.languagesText) ? g.languagesText.join(", ") : g.languagesText || "—")} />
+            <tr>
+              <th className="bg-body-tertiary" style={{ width: "20%" }}>
+                Prezzo
+              </th>
+              <td style={{ width: "40%" }}>{left?.price || "EUR"} €</td>
+              <td style={{ width: "40%" }}>{right?.price || "EUR"} €</td>
+            </tr>
+
+            <tr>
+              <th className="bg-body-tertiary">Piattaforme</th>
+              <td>{left?.platform ?? "—"}</td>
+              <td>{right?.platform ?? "—"}</td>
+            </tr>
+
+            <tr>
+              <th className="bg-body-tertiary">Uscita</th>
+              <td>{left?.releaseDate ?? "—"}</td>
+              <td>{right?.releaseDate ?? "—"}</td>
+            </tr>
+
+            <tr>
+              <th className="bg-body-tertiary">PEGI</th>
+              <td>{left?.pegi ?? "—"}</td>
+              <td>{right?.pegi ?? "—"}</td>
+            </tr>
+
+            <tr>
+              <th className="bg-body-tertiary">Modalità</th>
+              <td>{left?.modes?.length ? left.modes.join(" · ") : "—"}</td>
+              <td>{right?.modes?.length ? right.modes.join(" · ") : "—"}</td>
+            </tr>
+
+            <tr>
+              <th className="bg-body-tertiary">Developer</th>
+              <td>{left?.developer ?? "—"}</td>
+              <td>{right?.developer ?? "—"}</td>
+            </tr>
+
+            <tr>
+              <th className="bg-body-tertiary">Publisher</th>
+              <td>{left?.publisher ?? "—"}</td>
+              <td>{right?.publisher ?? "—"}</td>
+            </tr>
+
+            <tr>
+              <th className="bg-body-tertiary">Disponibilità</th>
+              <td>{Number.isFinite(left?.stock) ? `${left.stock} pezzi` : "—"}</td>
+              <td>{Number.isFinite(right?.stock) ? `${right.stock} pezzi` : "—"}</td>
+            </tr>
+
+            <tr>
+              <th className="bg-body-tertiary">Tag</th>
+              <td>{left?.tags?.length ? left.tags.join(", ") : "—"}</td>
+              <td>{right?.tags?.length ? right.tags.join(", ") : "—"}</td>
+            </tr>
+
+            <tr>
+              <th className="bg-body-tertiary">Audio</th>
+              <td>{left?.languagesAudio?.length ? left.languagesAudio.join(", ") : "—"}</td>
+              <td>{right?.languagesAudio?.length ? right.languagesAudio.join(", ") : "—"}</td>
+            </tr>
+
+            <tr>
+              <th className="bg-body-tertiary">Testo</th>
+              <td>{left?.languagesText?.length ? left.languagesText.join(", ") : "—"}</td>
+              <td>{right?.languagesText?.length ? right.languagesText.join(", ") : "—"}</td>
+            </tr>
           </tbody>
         </table>
       </div>
     </section>
   );
-}
-
-function Row({ label, va, vb, field, render }) {
-  return (
-    <tr>
-      <th className="bg-body-tertiary" style={{ width: "20%" }}>
-        {label}
-      </th>
-      <td style={{ width: "40%" }}>{render ? render(va) : va?.[field] ?? "—"}</td>
-      <td style={{ width: "40%" }}>{render ? render(vb) : vb?.[field] ?? "—"}</td>
-    </tr>
-  );
-}
-
-function priceFmt(v, c = "EUR") {
-  const n = toNum(v);
-  if (!Number.isFinite(n)) return "—";
-  try {
-    return new Intl.NumberFormat("it-IT", { style: "currency", currency: c }).format(n);
-  } catch {
-    return `${n} ${c}`;
-  }
 }

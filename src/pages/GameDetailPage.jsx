@@ -13,27 +13,25 @@ async function fetchJSON(url) {
   return res.json();
 }
 
+// Recupero per Id
 async function fetchById(id) {
   const data = await fetchJSON(`${BASE_URL}/${encodeURIComponent(id)}`);
-  return data.game || data;
+  return data.game;
 }
 
 async function resolveIdBySlug(slug) {
   try {
-    const data = await fetchJSON(`${BASE_URL}?slug=${encodeURIComponent(slug)}`);
-    const arr = Array.isArray(data) ? data : [];
-    const findSlug = arr.find((g) => g?.slug === slug);
-    if (findSlug?.id != null) return findSlug.id;
+    // Filtro per slug
+    const data = await fetchJSON(`${BASE_URL}?slug=${encodeURIComponent(slug)}`); // rendo sicuro lo slug
+    const findSlug = data.find((g) => g.slug === slug);
+    if (findSlug?.id != null) return findSlug.id; // ritorno l'id se lo trovo
   } catch (err) {
-    console.err(err);
+    console.error(err);
   }
 
+  // qui raccolgo tutti i giochi
   const all = await fetchJSON(BASE_URL);
-  const list = Array.isArray(all) ? all : [];
-  const exact = list.find((g) => g?.slug === slug);
-  if (exact?.id != null) return exact.id;
-
-  const byTitle = list.find((g) => slugify(g?.title || "") === slug);
+  const byTitle = all.find((g) => slugify(g?.title || "") === slug);
   if (byTitle?.id != null) return byTitle.id;
 
   throw new Error("Gioco non trovato");
@@ -59,16 +57,12 @@ export default function GameDetailPage() {
         setLoading(true);
         setError("");
 
-        const isNumeric = /^\d+$/.test(String(routeId));
-        const id = isNumeric ? routeId : await resolveIdBySlug(String(routeId));
+        const isNumericId = (v) => Number.isInteger(Number(v));
+        const id = isNumericId(routeId) ? routeId : await resolveIdBySlug(routeId);
         const full = await fetchById(id);
         if (!alive) return;
 
         setGame(full);
-
-        if (isNumeric && full?.slug) {
-          navigate(`/games/${full.slug}`, { replace: true });
-        }
       } catch (e) {
         if (alive) setError(e?.message || "Errore imprevisto");
       } finally {

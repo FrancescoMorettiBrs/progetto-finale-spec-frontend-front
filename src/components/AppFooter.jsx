@@ -65,7 +65,7 @@ export default function AppFooter() {
       <div className="app-footer__bottom">
         <div className="container py-3 d-flex flex-column flex-sm-row gap-2 justify-content-between align-items-center small">
           <span>© {year} GameHub — Demo</span>
-          <span className="opacity-85">Built with React &amp; Bootstrap</span>
+          <span className="opacity-85">Built by Francesco Moretti</span>
         </div>
       </div>
     </footer>

@@ -1,71 +1,65 @@
 import { useEffect, useState } from "react";
 import GameList from "./GameList";
 import useDebouncedValue from "../hooks/useDebounceValue";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useFavorites } from "../context/FavoritesContext";
 
 const BASE_URL = "http://localhost:3001/games";
 
 export default function GamesPage() {
   // UI
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [sortBy, setSortBy] = useState("title");
-  const [dir, setDir] = useState("asc");
+  const [search, setSearch] = useState(""); // Testo cercato
+  const [category, setCategory] = useState(""); // Filtro categoria
+  const [sortBy, setSortBy] = useState("title"); // Campo su cui ordinare(default: Titolo)
+  const [dir, setDir] = useState("asc"); // Direzione ordinamento
 
   // Data
-  const [games, setGames] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [games, setGames] = useState([]); // Risultati
+  const [loading, setLoading] = useState(false); // Caricamento
+  const [error, setError] = useState(""); // Gestione eventuale errore
 
-  const debouncedSearch = useDebouncedValue(search, 500);
-  const { openDock } = useFavorites();
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  // Apri dock se ?open=favorites (e pulisci la query)
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get("open") === "favorites") {
-      openDock();
-      params.delete("open");
-      navigate({ search: params.toString() ? `?${params.toString()}` : "" }, { replace: true });
-    }
-  }, [location.search, openDock, navigate]);
+  const debouncedSearch = useDebouncedValue(search, 500); // Ricerca con Debounce
 
   // Carica + ordina
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
+        // Inizio caricamento e pulizia eventuali errori precedenti
         setLoading(true);
         setError("");
 
+        // Costruisco la query string
         const qs = new URLSearchParams();
-        if (debouncedSearch) qs.set("search", debouncedSearch);
-        if (category) qs.set("category", category);
+        if (debouncedSearch) qs.set("search", debouncedSearch); // Filtro testuale
+        if (category) qs.set("category", category); // Filtro categorico
 
+        // Chiamata API
         const res = await fetch(`${BASE_URL}${qs.size ? `?${qs}` : ""}`);
         if (!res.ok) throw new Error(`Errore ${res.status}`);
 
+        // Ottengo l'array
         const data = await res.json();
+
+        // Se il componente si è smontato, esco
         if (!alive) return;
 
+        // Ordinamento
         const sorted = [...data].sort((a, b) => {
+          // Validazione
           const A = String(a?.[sortBy] ?? "").toLowerCase();
           const B = String(b?.[sortBy] ?? "").toLowerCase();
           return dir === "asc" ? A.localeCompare(B) : B.localeCompare(A);
         });
 
+        // Aggiorno con i dati ordinati
         setGames(sorted);
       } catch (e) {
-        if (alive) setError(e.message || "Errore imprevisto");
+        if (alive) setError(e.message || "Errore imprevisto"); // Gestisco un eventuale errore
       } finally {
-        if (alive) setLoading(false);
+        if (alive) setLoading(false); // FIne caricamento, se montato
       }
     })();
     return () => {
-      alive = false;
+      alive = false; // Cleanup dell'effetto
     };
   }, [debouncedSearch, category, sortBy, dir]);
 

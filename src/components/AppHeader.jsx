@@ -10,8 +10,6 @@ export default function AppHeader() {
     e.preventDefault();
     if (location.pathname.startsWith("/")) {
       openDock();
-    } else {
-      navigate("/games?open=favorites");
     }
   };
 

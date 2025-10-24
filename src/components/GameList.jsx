@@ -7,17 +7,18 @@ export default function GameList({ items }) {
   const { add, isSelected, toggleSelect } = useCompare();
 
   if (!items || items.length === 0) {
+    // Validazione
     return <p className="color-w">Nessun gioco disponibile.</p>;
   }
 
   return (
     <ul className="list-group shadow-sm">
       {items.map((g, i) => {
-        const hasId = g?.id != null; // se manca id non linko né comparo
-        const key = hasId ? g.id : `${g.title}-${i}`;
-        const category = g?.category ?? "—";
-        const selected = hasId && isSelected(g.id);
-        const slug = g.slug ?? slugify(g.title)
+        const hasId = g?.id != null; // Flag: abilito link/confronto solo se l'elemento ha un id valido
+        const key = hasId ? g.id : `${g.title}-${i}`; // Chiave unica per React
+        const category = g?.category ?? "—"; // Display sicuro: se la categoria manca, mostro un trattino
+        const selected = hasId && isSelected(g.id); // Stato di selezione nel comparatore
+        const slug = g.slug ?? slugify(g.title) // URL pulito: uso slug fornito o lo genero dal titolo
 
         return (
           <li key={key} className="list-group-item d-flex justify-content-between align-items-center">
@@ -39,6 +40,7 @@ export default function GameList({ items }) {
                 className={`btn btn-sm btn-icon ${selected ? "btn-primary" : "btn-outline-primary"}`}
                 onClick={() => (hasId ? toggleSelect({ id: g.id, title: g.title }) : add({ id: g.id, title: g.title }))}
                 disabled={!hasId}
+                // Comunico lo stato del toggle
                 aria-pressed={selected}
                 aria-label={selected ? "Rimuovi dal comparatore" : "Aggiungi al comparatore"}
                 title="Confronta"

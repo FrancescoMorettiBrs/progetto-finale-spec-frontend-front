@@ -3,20 +3,21 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useCompare } from "../context/CompareContext";
 
 export default function CompareBar() {
-  const { selected, remove, clear } = useCompare();
+  const { selected, remove, clear } = useCompare(); // Stato e azioni dal context
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [warn, setWarn] = useState("");
+  const [warn, setWarn] = useState(""); // Warning 
 
   // Nascondo la barra nella pagina di confronto
   const hidden = location.pathname.startsWith("/compare");
   if (hidden) return null;
 
-  const [a, b] = selected;
+  const [a, b] = selected; // Prendo solo i primi 2 
 
   // URL di confronto: lo ricalcolo solo quando cambiano gli slug
   const compareHref = useMemo(() => {
+    // Validazione
     if (!a || !b || !a.slug || !b.slug) return null;
     const qs = new URLSearchParams({ a: a.slug, b: b.slug }).toString();
     return `/compare?${qs}`;
@@ -30,10 +31,12 @@ export default function CompareBar() {
   }, [warn]);
 
   const handleCompare = () => {
+    // Validazione
     if (!a || !b) {
       setWarn("Seleziona due giochi per procedere al confronto.");
       return;
     }
+    // Validazione
     if (!compareHref) {
       setWarn("Dati incompleti: mancano gli slug dei giochi selezionati.");
       return;
@@ -42,6 +45,7 @@ export default function CompareBar() {
   };
 
   function Slot({ item, onRemove }) {
+    // Vuoto, mostra placeholder
     if (!item) {
       return (
         <div className="compare-slot empty">
@@ -50,6 +54,7 @@ export default function CompareBar() {
       );
     }
     return (
+      // pieno, titolo + pulsante attivo
       <div className="compare-slot">
         <strong className="me-2">{item.title}</strong>
         <button type="button" className="btn-close btn-close-white btn-close-sm" aria-label="Rimuovi" onClick={onRemove} />

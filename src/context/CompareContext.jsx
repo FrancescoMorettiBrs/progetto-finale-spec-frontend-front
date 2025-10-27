@@ -14,9 +14,10 @@ export function CompareProvider({ children }) {
     }
   });
 
+
   useEffect(() => {
     try {
-      localStorage.setItem("compare:selected", JSON.stringify(selected));
+      localStorage.setItem("compare:selected", JSON.stringify(selected)); // trasformo l’oggetto in una stringa per localStorage
     } catch (err) {
       console.error(err);
     }

@@ -12,7 +12,7 @@ export default function FavoriteToggle({ game, variant = "icon", className = "" 
   const handleClick = async () => {
     if (!game || game.id == null || busy) return;
 
-    // già preferito → rimuovo
+    // già preferito => rimuovo
     if (fav) {
       toggle(game);
       return;

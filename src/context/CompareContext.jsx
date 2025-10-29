@@ -14,7 +14,6 @@ export function CompareProvider({ children }) {
     }
   });
 
-
   useEffect(() => {
     try {
       localStorage.setItem("compare:selected", JSON.stringify(selected)); // trasformo l’oggetto in una stringa per localStorage
@@ -59,7 +58,7 @@ export function CompareProvider({ children }) {
     });
   }, []);
 
-  const value = useMemo(() => ({ selected, add, remove, clear, isSelected, toggleSelect }), [selected, add, remove, clear, isSelected, toggleSelect]);
+  const value = useMemo(() => ({ selected, add, remove, clear, isSelected, toggleSelect }), [selected]);
 
   return <CompareContext.Provider value={value}>{children}</CompareContext.Provider>;
 }

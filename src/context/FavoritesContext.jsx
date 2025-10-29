@@ -7,13 +7,13 @@ export function FavoritesProvider({ children }) {
   const [isOpen, setIsOpen] = useState(false);
   const openDock = useCallback(() => setIsOpen(true), []);
   const closeDock = useCallback(() => setIsOpen(false), []);
-  const toggleDock = useCallback(() => setIsOpen((v) => !v), []);
+  const toggleDock = useCallback(() => setIsOpen((v) => !v), []); // forma funzionale, evito errori e aggiorno sempre
 
-  // Dati: lista preferiti (id, title, category, image)
+  // eseguo al primo mount
   const [items, setItems] = useState(() => {
     try {
       const raw = localStorage.getItem("favorites:items");
-      return raw ? JSON.parse(raw) : [];
+      return raw ? JSON.parse(raw) : []; // ottengo array dei preferiti
     } catch {
       return [];
     }
@@ -59,6 +59,7 @@ export function FavoritesProvider({ children }) {
   // Svuota tutto
   const clear = useCallback(() => setItems([]), []);
 
+  // memoizzo per evitare re-render
   const value = useMemo(
     () => ({
       items,
@@ -72,7 +73,7 @@ export function FavoritesProvider({ children }) {
       closeDock,
       toggleDock,
     }),
-    [items, isOpen, add, remove, toggle, isFav, clear, openDock, closeDock, toggleDock]
+    [items, isOpen]
   );
 
   return <FavoritesContext.Provider value={value}>{children}</FavoritesContext.Provider>;

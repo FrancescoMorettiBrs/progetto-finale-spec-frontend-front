@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useFavorites } from "../context/FavoritesContext";
+import slugify from "../utils/slugify";
 
 const offcanvasId = "favorites-offcanvas";
 
@@ -25,27 +26,30 @@ export default function FavoritesDock() {
             <p className="text-body-secondary mb-0">Nessun preferito. Aggiungi giochi dal catalogo o dal dettaglio.</p>
           ) : (
             <ul className="list-group">
-              {items.map((g) => (
-                <li key={g.id} className="list-group-item d-flex align-items-center justify-content-between">
-                  <div className="d-flex align-items-center gap-3">
-                    <Thumb src={g.image} alt={g.title} />
-                    <div>
-                      <div className="fw-semibold">{g.title}</div>
-                      <div className="small text-body-secondary">{g.category || "—"}</div>
+              {items.map((g) => {
+                const computedSlug = g.slug || slugify(g.title || "");
+                return (
+                  <li key={g.id} className="list-group-item d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center gap-3">
+                      <Thumb src={g.image} alt={g.title} />
+                      <div>
+                        <div className="fw-semibold">{g.title}</div>
+                        <div className="small text-body-secondary">{g.category || "—"}</div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="d-flex align-items-center gap-2">
-                    {/* Link semplice per id */}
-                    <Link className="btn btn-sm btn-outline-primary" to={`/games/${g.id}`} onClick={closeDock} title="Apri scheda">
-                      Apri
-                    </Link>
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => remove(g.id)} title="Rimuovi">
-                      Rimuovi
-                    </button>
-                  </div>
-                </li>
-              ))}
+                    <div className="d-flex align-items-center gap-2">
+                      {/* Link semplice per id */}
+                      <Link className="btn btn-sm btn-outline-primary" to={`/games/${computedSlug}`} onClick={closeDock} title="Apri scheda">
+                        Apri
+                      </Link>
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => remove(g.id)} title="Rimuovi">
+                        Rimuovi
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
